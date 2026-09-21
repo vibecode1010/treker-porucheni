@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>Протокол в поручения</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=PT+Serif:wght@700&display=swap">
+<style>
+  :root{
+    --bg:#E9EDF2;
+    --surface:#FFFFFF;
+    --surface-2:#F3F6F9;
+    --line:#D6DEE7;
+    --line-strong:#B6C2CF;
+    --ink:#12202E;
+    --ink-2:#47596A;
+    --ink-3:#78899B;
+    --accent:#1F4E9C;
+    --accent-soft:#E4ECF9;
+    --danger:#B3261E;
+    --danger-soft:#FBE8E5;
+    --warn:#8E5B08;
+    --warn-soft:#FAEFD8;
+    --ok:#186B47;
+    --ok-soft:#E2F1E8;
+    --on-solid:#FFFFFF;
+    --shadow:0 1px 2px rgba(18,32,46,.06), 0 10px 26px -16px rgba(18,32,46,.28);
+    --r:12px;
+    --sans:"Golos Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --serif:"PT Serif",Georgia,serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E151D;
+      --surface:#17212C;
+      --surface-2:#1E2A37;
+      --line:#2B3946;
+      --line-strong:#3D4E60;
+      --ink:#E8EFF6;
+      --ink-2:#A9B9C9;
+      --ink-3:#7E8E9E;
+      --accent:#86ACF2;
+      --accent-soft:#1C2B41;
+      --danger:#FF9587;
+      --danger-soft:#3A201C;
+      --warn:#E5B469;
+      --warn-soft:#332715;
+      --ok:#74D4A2;
+      --ok-soft:#15302A;
+      --on-solid:#0E151D;
+      --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 28px -16px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E151D;
+    --surface:#17212C;
+    --surface-2:#1E2A37;
+    --line:#2B3946;
+    --line-strong:#3D4E60;
+    --ink:#E8EFF6;
+    --ink-2:#A9B9C9;
+    --ink-3:#7E8E9E;
+    --accent:#86ACF2;
+    --accent-soft:#1C2B41;
+    --danger:#FF9587;
+    --danger-soft:#3A201C;
+    --warn:#E5B469;
+    --warn-soft:#332715;
+    --ok:#74D4A2;
+    --ok-soft:#15302A;
+    --on-solid:#0E151D;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 28px -16px rgba(0,0,0,.7);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.45;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:0 40px}
+
+  /* ---------- header ---------- */
+  header.top{
+    position:sticky;
+    top:env(safe-area-inset-top, 0px);
+    z-index:20;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:saturate(140%) blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .top-in{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+  .brand{display:flex;align-items:baseline;gap:8px;min-width:0}
+  .brand b{font-family:var(--serif);font-weight:700;font-size:18px;letter-spacing:-.01em;white-space:nowrap}
+  .brand span{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+  .top-actions{margin-left:auto;display:flex;gap:6px}
+  .icon-btn{
+    appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);
+    border-radius:9px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;font-size:15px;
+  }
+  .icon-btn:hover{border-color:var(--line-strong);color:var(--ink)}
+
+  /* ---------- stats ---------- */
+  .stats{display:flex;gap:8px;overflow-x:auto;padding:14px 0 2px;scrollbar-width:none}
+  .stats::-webkit-scrollbar{display:none}
+  .stat{
+    flex:1 1 0;min-width:96px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:10px 12px;box-shadow:var(--shadow)
+  }
+  .stat b{display:block;font-family:var(--mono);font-size:22px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat i{
+    font-style:normal;font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.03em;
+    display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  .stat.s-late b{color:var(--danger)}
+  .stat.s-soon b{color:var(--warn)}
+  .stat.s-done b{color:var(--ok)}
+
+  /* ---------- panels ---------- */
+  section.panel{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);margin-top:16px;overflow:hidden
+  }
+  .panel-head{
+    display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;
+    background:var(--surface-2);border-bottom:1px solid var(--line)
+  }
+  .panel-head h2{margin:0;font-family:var(--serif);font-weight:700;font-size:15px;letter-spacing:-.01em}
+  .panel-head .hint{font-size:12px;color:var(--ink-3);margin-left:auto;text-align:right}
+  .chev{transition:transform .18s ease;color:var(--ink-3)}
+  .panel[data-open="false"] .chev{transform:rotate(-90deg)}
+  .panel-body{padding:14px;display:flex;flex-direction:column;gap:12px}
+
+  label.fl{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--ink-2);font-weight:500}
+  .row2{display:flex;gap:10px;flex-wrap:wrap}
+  .row2 > *{flex:1 1 180px;min-width:0}
+  input[type=text],input[type=date],textarea,select{
+    font-family:inherit;font-size:15px;color:var(--ink);background:var(--surface);
+    border:1px solid var(--line-strong);border-radius:9px;padding:9px 11px;width:100%
+  }
+  input[type=date]{font-family:var(--mono);font-size:14px}
+  textarea{min-height:150px;resize:vertical;line-height:1.5}
+  input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,[tabindex]:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px
+  }
+  .btn{
+    appearance:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;
+    border-radius:9px;padding:10px 14px;border:1px solid var(--line-strong);
+    background:var(--surface);color:var(--ink)
+  }
+  .btn:hover{border-color:var(--ink-3)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-solid)}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent;border-color:var(--line)}
+  .btn.small{padding:7px 10px;font-size:13px;font-weight:500}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap}
+
+  /* ---------- draft ---------- */
+  .draft-wrap{border-top:1px dashed var(--line-strong);padding-top:12px;display:flex;flex-direction:column;gap:10px}
+  .draft-note{font-size:13px;color:var(--ink-2);margin:0}
+  .draft{
+    border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface-2);
+    display:flex;flex-direction:column;gap:8px
+  }
+  .draft[data-on="false"]{opacity:.45}
+  .draft-top{display:flex;gap:8px;align-items:flex-start}
+  .draft-top input[type=checkbox]{width:18px;height:18px;margin-top:10px;accent-color:var(--accent);flex:0 0 auto}
+  .draft-grid{display:flex;gap:8px;flex-wrap:wrap;padding-left:26px}
+  .draft-grid > label{flex:1 1 150px}
+  .flag{border-color:var(--warn)!important}
+  .miss{font-size:11px;color:var(--warn)}
+  .unparsed{font-size:12px;color:var(--ink-3);margin:0}
+  .unparsed ul{margin:4px 0 0;padding-left:18px}
+
+  /* ---------- filters ---------- */
+  .filters{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    appearance:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;
+    border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-2);
+    border-radius:999px;padding:7px 12px
+  }
+  .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+  .chip .n{font-family:var(--mono);font-size:12px;opacity:.7;margin-left:4px}
+  .chip.late[aria-pressed="true"]{background:var(--danger);border-color:var(--danger);color:var(--on-solid)}
+
+  /* ---------- task list ---------- */
+  .list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+  .card{
+    position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--shadow);padding:12px 14px 12px 16px;overflow:hidden
+  }
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--line-strong)}
+  .card.is-late::before{background:var(--danger)}
+  .card.is-soon::before{background:var(--warn)}
+  .card.is-done::before{background:var(--ok)}
+  .card.is-progress::before{background:var(--accent)}
+  .card-text{font-size:15px;font-weight:500;line-height:1.4;margin:0 0 8px;overflow-wrap:anywhere}
+  .card.is-done .card-text{color:var(--ink-3);text-decoration:line-through;text-decoration-thickness:1px}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+  .tag{
+    display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);
+    background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 9px;max-width:100%
+  }
+  .tag b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag .av{
+    width:17px;height:17px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-size:10px;font-weight:700;flex:0 0 auto
+  }
+  .tag.date{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .tag.date.late{background:var(--danger-soft);border-color:transparent;color:var(--danger);font-weight:500}
+  .tag.date.soon{background:var(--warn-soft);border-color:transparent;color:var(--warn);font-weight:500}
+  .tag.none{color:var(--ink-3)}
+  .tag.meet{color:var(--ink-3)}
+  .card-foot{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden;flex:1 1 auto}
+  .seg button{
+    appearance:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;white-space:nowrap;
+    background:var(--surface);color:var(--ink-2);border:0;border-right:1px solid var(--line);
+    padding:8px 4px;flex:1 1 0;min-height:38px
+  }
+  .seg button:last-child{border-right:0}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface);font-weight:600}
+  .seg button.st-progress[aria-pressed="true"]{background:var(--accent);color:var(--on-solid)}
+  .seg button.st-done[aria-pressed="true"]{background:var(--ok);color:var(--on-solid)}
+  .card-del{
+    appearance:none;background:transparent;border:1px solid transparent;color:var(--ink-3);
+    cursor:pointer;border-radius:8px;width:38px;height:38px;font-size:15px;flex:0 0 auto
+  }
+  .card-del:hover{color:var(--danger);border-color:var(--line)}
+  .card-edit{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .empty{
+    text-align:center;color:var(--ink-3);font-size:14px;padding:28px 16px;
+    border:1px dashed var(--line-strong);border-radius:var(--r)
+  }
+  .grp-label{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);
+    margin:14px 2px 2px;font-weight:600
+  }
+  .grp-label.late{color:var(--danger)}
+
+  /* ---------- notice / footer ---------- */
+  .notice{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 30%, transparent);
+    color:var(--warn);border-radius:10px;padding:9px 12px;font-size:13px;margin-top:16px
+  }
+  .notice .btn{margin-left:auto}
+  footer.foot{margin-top:24px;color:var(--ink-3);font-size:12px;display:flex;flex-direction:column;gap:8px}
+  .toast{
+    position:fixed;left:50%;transform:translateX(-50%) translateY(20px);
+    bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+    background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:999px;font-size:13px;
+    font-weight:500;z-index:50;opacity:0;transition:opacity .2s ease, transform .2s ease;pointer-events:none;
+    max-width:calc(100% - 32px);text-align:center
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+  @media (max-width:430px){
+    .brand span{display:none}
+    .stat{min-width:0;padding:9px 9px}
+    .stat b{font-size:19px}
+    .draft-grid{padding-left:0}
+    .panel-head .hint{display:none}
+    .seg button{font-size:12.5px}
+  }
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <b>Поручения</b><span>после совещания</span>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="themeBtn" type="button" title="Светлая / тёмная тема" aria-label="Переключить тему">◐</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="stats" id="stats"></div>
+
+  <div id="demoNotice" class="notice" hidden>
+    <span>Показан пример из демонстрационного протокола.</span>
+    <button class="btn small" id="clearDemo" type="button">Очистить и начать своё</button>
+  </div>
+
+  <section class="panel" id="inputPanel" data-open="true">
+    <div class="panel-head" id="inputHead" role="button" tabindex="0" aria-expanded="true" aria-controls="inputBody">
+      <span class="chev" aria-hidden="true">▾</span>
+      <h2>Итоги совещания</h2>
+      <span class="hint">вставьте текст — разберу на поручения</span>
+    </div>
+    <div class="panel-body" id="inputBody">
+      <div class="row2">
+        <label class="fl">Совещание
+          <input type="text" id="meetName" placeholder="Планёрка по проекту">
+        </label>
+        <label class="fl">Дата совещания
+          <input type="date" id="meetDate">
+        </label>
+      </div>
+      <label class="fl">Текст протокола или заметки
+        <textarea id="src" placeholder="Иванов — подготовить отчёт по выручке до 25.09
+Поручить Петровой согласовать смету с подрядчиком, срок 2 октября
+- Сидоров: подготовить договор к пятнице
+3. Собрать обратную связь от клиентов — отв. Кузнецов А.В. — до конца недели"></textarea>
+      </label>
+      <div class="btn-row">
+        <button class="btn primary" id="parseBtn" type="button">Разобрать текст</button>
+        <button class="btn ghost" id="manualBtn" type="button">+ Поручение вручную</button>
+        <button class="btn ghost" id="sampleBtn" type="button">Вставить пример текста</button>
+      </div>
+      <p class="unparsed" id="tipLine">Понимаю «до 25.09», «к 2 октября», «до пятницы», «срок — завтра», «в течение 3 дней», фамилии с инициалами, «отв.», «поручить Иванову», @ник. Ctrl+Enter — разобрать.</p>
+
+      <div class="draft-wrap" id="draftWrap" hidden>
+        <p class="draft-note" id="draftNote"></p>
+        <div id="draftList"></div>
+        <p class="unparsed" id="skipped" hidden></p>
+        <div class="btn-row">
+          <button class="btn primary" id="addBtn" type="button">Добавить в трекер</button>
+          <button class="btn ghost" id="dropBtn" type="button">Отменить</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="chips" id="statusChips"></div>
+    <div class="row2">
+      <label class="fl">Ответственный
+        <select id="fAssignee"></select>
+      </label>
+      <label class="fl">Совещание
+        <select id="fMeeting"></select>
+      </label>
+      <label class="fl">Поиск
+        <input type="text" id="fQuery" placeholder="по тексту поручения">
+      </label>
+    </div>
+  </div>
+
+  <div class="list" id="list"></div>
+  <datalist id="assignees"></datalist>
+
+  <section class="panel" id="exportPanel" data-open="false" style="margin-top:20px">
+    <div class="panel-head" id="exportHead" role="button" tabindex="0" aria-expanded="false" aria-controls="exportBody">
+      <span class="chev" aria-hidden="true">▾</span>
+      <h2>Выгрузка и резервная копия</h2>
+      <span class="hint">видимые поручения</span>
+    </div>
+    <div class="panel-body" id="exportBody" hidden>
+      <div class="btn-row">
+        <button class="btn" id="copyText" type="button">Копировать списком</button>
+        <button class="btn" id="copyMd" type="button">Копировать таблицей</button>
+        <button class="btn" id="dlCsv" type="button">Скачать CSV для Excel</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost small" id="dlJson" type="button">Скачать резервную копию</button>
+        <button class="btn ghost small" id="upJson" type="button">Загрузить из копии</button>
+        <input type="file" id="jsonFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="unparsed">«Копировать списком» — готовый текст для мессенджера или почты. CSV открывается в Excel с русскими заголовками. Поручения хранятся только в этом браузере, поэтому раз в неделю стоит скачивать резервную копию.</p>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div>Данные не уходят с устройства: всё лежит в памяти этого браузера. Просрочка считается на сегодняшнюю дату.</div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= хранилище ======================= */
+  var KEY = "meeting-tasks-v1";
+  var state = { tasks: [], demo: false };
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var p = JSON.parse(raw);
+        if(p && Array.isArray(p.tasks)){ state.tasks = p.tasks; state.demo = !!p.demo; return true; }
+      }
+    }catch(e){}
+    return false;
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+  }
+
+  /* ======================= даты ======================= */
+  function today(){ var d = new Date(); d.setHours(0,0,0,0); return d; }
+  function pad(n){ return n<10 ? "0"+n : ""+n; }
+  function toISO(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function fromISO(s){ var a = String(s).split("-"); return new Date(+a[0], +a[1]-1, +a[2]); }
+  function isISO(s){ return /^\d{4}-\d{2}-\d{2}$/.test(String(s||"")); }
+  function daysLeft(iso){ return Math.round((fromISO(iso) - today())/86400000); }
+  function fmtDate(iso){ var d = fromISO(iso); return pad(d.getDate())+"."+pad(d.getMonth()+1)+"."+d.getFullYear(); }
+  function plural(n, one, few, many){
+    var a = Math.abs(n) % 100, b = a % 10;
+    if(a > 10 && a < 20) return many;
+    if(b > 1 && b < 5) return few;
+    if(b === 1) return one;
+    return many;
+  }
+  function dueLabel(iso){
+    var n = daysLeft(iso);
+    if(n < 0) return "просрочено на "+Math.abs(n)+" "+plural(n,"день","дня","дней");
+    if(n === 0) return "сегодня";
+    if(n === 1) return "завтра";
+    if(n === 2) return "послезавтра";
+    if(n <= 7) return "через "+n+" "+plural(n,"день","дня","дней");
+    return "";
+  }
+
+  /* ======================= разбор текста ======================= */
+  var MONTH_STEMS = ["январ","феврал","март","апрел","ма[йя]","июн","июл","август","сентябр","октябр","ноябр","декабр"];
+  var MONTH_RE = new RegExp("(" + MONTH_STEMS.join("|") + ")[а-я]*", "i");
+  var DOW = ["воскресен","понедельн","вторник","сред","четверг","пятниц","суббот"];
+
+  function yearFix(d){
+    var t = today();
+    if((t - d) / 86400000 > 1) d.setFullYear(d.getFullYear() + 1);
+    return d;
+  }
+  function nextDow(idx){
+    var t = today();
+    var diff = (idx - t.getDay() + 7) % 7;
+    t.setDate(t.getDate() + diff);
+    return t;
+  }
+  function plusDays(n){ var t = today(); t.setDate(t.getDate()+n); return t; }
+
+  // возвращает {iso, from, to} или null
+  function extractDate(s){
+    var low = s.toLowerCase(), m, d;
+
+    // 25.09 / 25.09.2026 / 25/09
+    m = /(?:^|[\s(«"„])((?:до|к|по|не\s+позднее|срок[а-я]*|дедлайн)\s*[:—–-]?\s*)?(\d{1,2})[.\/](\d{1,2})(?:[.\/](\d{2,4}))?(?![\d.\/])/.exec(low);
+    if(m){
+      var dd = +m[2], mm = +m[3];
+      if(dd >= 1 && dd <= 31 && mm >= 1 && mm <= 12){
+        var yy = m[4] ? (+m[4] < 100 ? 2000 + +m[4] : +m[4]) : null;
+        d = new Date(yy || today().getFullYear(), mm-1, dd);
+        if(!yy) yearFix(d);
+        return span(m, low, toISO(d));
+      }
+    }
+    // 2 октября / 2 октября 2026
+    m = new RegExp("(?:^|[\\s(«\"„])((?:до|к|по|не\\s+позднее|срок[а-я]*|дедлайн)\\s*[:—–-]?\\s*)?(\\d{1,2})\\s*(" + MONTH_STEMS.join("|") + ")[а-я]*(?:\\s*(\\d{4}))?").exec(low);
+    if(m){
+      var mi = monthIndex(m[3]);
+      if(mi >= 0){
+        d = new Date(m[4] ? +m[4] : today().getFullYear(), mi, +m[2]);
+        if(!m[4]) yearFix(d);
+        return span(m, low, toISO(d));
+      }
+    }
+    // до конца недели / месяца / года / квартала
+    m = /(?:до\s+)?конц[а-я]*\s+(недел[а-я]*|месяц[а-я]*|год[а-я]*|квартал[а-я]*)/.exec(low);
+    if(m){
+      var t = today();
+      if(/недел/.test(m[1])){ t = nextDow(5); }
+      else if(/месяц/.test(m[1])){ t = new Date(t.getFullYear(), t.getMonth()+1, 0); }
+      else if(/квартал/.test(m[1])){ var q = Math.floor(t.getMonth()/3); t = new Date(t.getFullYear(), q*3+3, 0); }
+      else { t = new Date(t.getFullYear(), 11, 31); }
+      return span(m, low, toISO(t));
+    }
+    // до пятницы / к понедельнику
+    m = new RegExp("(?:до|к|в|во|на)\\s+(" + DOW.join("[а-я]*|") + "[а-я]*)").exec(low);
+    if(m){
+      var di = dowIndex(m[1]);
+      if(di >= 0) return span(m, low, toISO(nextDow(di)));
+    }
+    // сегодня / завтра / послезавтра
+    m = /(?:^|[\s(«"„,])(послезавтра|завтра|сегодня)/.exec(low);
+    if(m){
+      var n = m[1] === "сегодня" ? 0 : (m[1] === "завтра" ? 1 : 2);
+      return span(m, low, toISO(plusDays(n)));
+    }
+    // через 3 дня / через 2 недели
+    m = /через\s+(\d+)\s*(дн|недел|месяц)[а-яё]*/.exec(low);
+    if(m){
+      var k = +m[1], t2 = today();
+      if(m[2] === "дн") t2.setDate(t2.getDate()+k);
+      else if(m[2] === "недел") t2.setDate(t2.getDate()+7*k);
+      else t2.setMonth(t2.getMonth()+k);
+      return span(m, low, toISO(t2));
+    }
+    // в течение 3 дней
+    m = /в\s+течени[ей]\s+(\d+)\s*(?:рабочих\s+)?дн[а-яё]*/.exec(low);
+    if(m) return span(m, low, toISO(plusDays(+m[1])));
+    // срочно
+    m = /(?:^|[\s(«"„,])(срочно|asap|как\s+можно\s+скорее|как\s+можно\s+быстрее)/.exec(low);
+    if(m) return span(m, low, toISO(today()));
+
+    return null;
+  }
+  function span(m, low, iso){
+    var from = m.index, txt = m[0];
+    // не съедаем ведущий разделитель
+    var lead = /^[\s(«"„,]/.test(txt) ? 1 : 0;
+    return { iso: iso, from: from + lead, to: from + txt.length };
+  }
+  function monthIndex(stem){
+    for(var i=0;i<MONTH_STEMS.length;i++){
+      if(new RegExp("^"+MONTH_STEMS[i]).test(stem)) return i;
+    }
+    return -1;
+  }
+  function dowIndex(w){
+    for(var i=0;i<DOW.length;i++){ if(w.indexOf(DOW[i]) === 0) return i; }
+    return -1;
+  }
+
+  var NAME = "[А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?";
+  var INIT = "(?:\\s*[А-ЯЁ]\\.\\s*[А-ЯЁ]?\\.?)";
+  var STOP = /^(Задача|Задачи|Решение|Решения|Решили|Поручение|Поручения|Постановили|Срок|Сроки|Ответственный|Ответственная|Исполнитель|Вопрос|Итог|Итоги|Повестка|Протокол|Совещание|Планёрка|Планерка|Проект|Отдел|Департамент|Комиссия|Обсудили|Договорились|Дата|Присутствовали|Участники|Также|Кроме|Далее|Нужно|Надо|Необходимо|Следует)$/;
+
+  function nameOk(raw){
+    var one = raw.trim().split(/\s+/);
+    if(STOP.test(one[0])) return false;
+    if(/(ть|ться|тся)$/.test(one[0])) return false;
+    return true;
+  }
+  function normName(raw){
+    var s = raw.trim().replace(/\s+/g," ");
+    s = s.replace(/([А-ЯЁ])\.\s*([А-ЯЁ])\.?$/, "$1.$2.");
+    s = s.replace(/\s+([А-ЯЁ]\.)/g, " $1").replace(/\s+$/,"");
+    // дательный падеж -> именительный (Иванову -> Иванов)
+    var parts = s.split(" ");
+    parts[0] = parts[0]
+      .replace(/^([А-ЯЁ][а-яё]+(?:ов|ев|ёв|ин|ын|ск))у$/, "$1")
+      .replace(/^([А-ЯЁ][а-яё]+(?:ов|ев|ёв|ин|ын))ой$/, "$1а")
+      .replace(/^([А-ЯЁ][а-яё]+ск)ому$/, "$1ий")
+      .replace(/^([А-ЯЁ][а-яё]+ск)ой$/, "$1ая");
+    return parts.join(" ").trim();
+  }
+
+  var MARK_RE = /(?:^|[\s(,;—–-])(?:ответственн[а-яё]*|исполнител[а-яё]*|назначен[а-яё]*|поруч(?:ается|ено|ить|аю|аем)|отв\.?)\s*[:—–-]?\s*/i;
+
+  // возвращает {name, from, to} или null
+  function extractAssignee(s){
+    var m, re;
+
+    // отв.: Иванов И.И. / ответственный — Петров / поручить Иванову
+    m = MARK_RE.exec(s);
+    if(m){
+      var mStart = m.index + (/^[\s(,;—–-]/.test(m[0]) ? 1 : 0);
+      var mEnd = m.index + m[0].length;
+      var rest = s.slice(mEnd);
+      var nm = new RegExp("^(" + NAME + INIT + "?)").exec(rest);
+      if(nm && nameOk(nm[1])) return { name: normName(nm[1]), from: mStart, to: mEnd + nm[1].length };
+      var hm = /^@([A-Za-zА-Яа-яЁё0-9_.-]{2,})/.exec(rest);
+      if(hm) return { name: "@"+hm[1], from: mStart, to: mEnd + hm[0].length };
+    }
+
+    // @ник
+    m = /(?:^|\s)@([A-Za-zА-Яа-яЁё0-9_.-]{2,})/.exec(s);
+    if(m) return { name: "@"+m[1], from: m.index + (/^\s/.test(m[0])?1:0), to: m.index + m[0].length };
+
+    // Иванов И.И. где угодно
+    m = new RegExp("(" + NAME + INIT + ")").exec(s);
+    if(m && nameOk(m[1])) return { name: normName(m[1]), from: m.index, to: m.index + m[0].length };
+    m = new RegExp("([А-ЯЁ]\\.\\s*[А-ЯЁ]?\\.?\\s*" + NAME + ")").exec(s);
+    if(m) return { name: normName(m[1]), from: m.index, to: m.index + m[0].length };
+
+    // Иванов — задача… / Иванов: задача…
+    re = new RegExp("^\\s*(" + NAME + "(?:\\s+" + NAME + "){0,1})\\s*[—–:-]\\s+(?=\\S)");
+    m = re.exec(s);
+    if(m && nameOk(m[1]) && s.slice(m[0].length).trim().length > 2) return { name: normName(m[1]), from: m.index, to: m.index + m[0].length };
+
+    // …задача — Иванов
+    re = new RegExp("[—–-]\\s*(" + NAME + "(?:\\s+" + NAME + ")?)\\s*[.)]?\\s*$");
+    m = re.exec(s);
+    if(m && nameOk(m[1])) return { name: normName(m[1]), from: m.index, to: m.index + m[0].length };
+
+    return null;
+  }
+
+  var HEADER_RE = /^(повестка|протокол|присутствовали|участники|дата|время|место|итог[аи]?|обсудили|решили|постановили|поручени[ея]|задачи|разное|слушали|докладчик|планёрка|планерка|совещание|встреча|созвон)(?![а-яё])/i;
+  var INF_RE = /[а-яё]{2,}(ть|ться|тись)(?![а-яё])/i;
+
+  function cleanTask(t){
+    t = t.replace(/\s+/g, " ").trim();
+    t = t.replace(/^[-—–•*·>»\s]+/, "").replace(/^\d{1,2}[.)]\s*/, "");
+    t = t.replace(/^(поручени[ея]|задач[аи]|пункт|решили|постановили|решение|итоги)\s*[:.—–-]\s*/i, "");
+    // остатки маркеров вроде «, отв.» или «срок:» без значения
+    t = t.replace(/[,;]?\s*(отв\.?|ответственн[а-яё]*|исполнител[а-яё]*|срок[а-яё]*|дедлайн)\s*[:.—–-]?\s*(?=$|[,;])/gi, "");
+    t = t.replace(/^[,;:—–.\s-]+/, "").replace(/[,;:—–\s-]+$/, "");
+    t = t.replace(/\s+\(\s*\)/g, "");
+    t = t.replace(/\s{2,}/g, " ").replace(/\s+([,.;])/g, "$1");
+    if(t) t = t.charAt(0).toUpperCase() + t.slice(1);
+    return t;
+  }
+
+  function parseText(raw){
+    var out = [], skipped = [];
+    var chunks = String(raw).split(/[\n\r]+/);
+    var lines = [];
+    chunks.forEach(function(c){
+      c.split(/;\s+/).forEach(function(p){ if(p.trim()) lines.push(p); });
+    });
+
+    lines.forEach(function(line0){
+      var line = line0.replace(/\s+/g," ").trim();
+      if(!line) return;
+      var bare = line.replace(/^[-—–•*·>»\s]+/, "").replace(/^\d{1,2}[.)]\s*/, "");
+      if(!bare) return;
+
+      // служебные строки протокола: «Повестка», «Присутствовали: …», «Решили:»
+      if(HEADER_RE.test(bare) && !INF_RE.test(bare)) return;
+
+      var work = bare;
+      var dt = extractDate(work);
+      if(dt){ work = work.slice(0, dt.from) + " " + work.slice(dt.to); }
+      var as = extractAssignee(work);
+      if(as){ work = work.slice(0, as.from) + " " + work.slice(as.to); }
+
+      var text = cleanTask(work);
+      if(text.length < 3){
+        if(bare.length > 2) skipped.push(bare);
+        return;
+      }
+      out.push({
+        text: text,
+        assignee: as ? as.name : "",
+        due: dt ? dt.iso : ""
+      });
+    });
+
+    return { items: out, skipped: skipped };
+  }
+
+  /* ======================= статусы ======================= */
+  var STATUSES = [
+    { id:"new", label:"Новая" },
+    { id:"progress", label:"В работе" },
+    { id:"done", label:"Выполнена" }
+  ];
+  function statusLabel(id){
+    for(var i=0;i<STATUSES.length;i++) if(STATUSES[i].id === id) return STATUSES[i].label;
+    return "Новая";
+  }
+  function isLate(t){ return t.status !== "done" && isISO(t.due) && daysLeft(t.due) < 0; }
+  function isSoon(t){ return t.status !== "done" && isISO(t.due) && daysLeft(t.due) >= 0 && daysLeft(t.due) <= 2; }
+
+  /* ======================= элементы ======================= */
+  var $ = function(id){ return document.getElementById(id); };
+  var elList = $("list"), elStats = $("stats"), elChips = $("statusChips");
+  var filter = { status:"all", assignee:"all", meeting:"all", q:"" };
+  var drafts = [];
+  var manyMeetings = false;
+
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2400);
+  }
+  function uid(){ return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+
+  /* ======================= счётчики и фильтры ======================= */
+  function counts(){
+    var c = { all: state.tasks.length, late:0, soon:0, open:0, done:0, new:0, progress:0 };
+    state.tasks.forEach(function(t){
+      if(t.status === "done") c.done++;
+      else { c.open++; if(t.status === "progress") c.progress++; else c.new++; }
+      if(isLate(t)) c.late++;
+      if(isSoon(t)) c.soon++;
+    });
+    return c;
+  }
+
+  function renderStats(){
+    var c = counts();
+    var cells = [
+      { n: c.all, l: "всего", cls: "" },
+      { n: c.late, l: "просрочено", cls: "s-late" },
+      { n: c.soon, l: "срок близко", cls: "s-soon" },
+      { n: c.done, l: "выполнено", cls: "s-done" }
+    ];
+    elStats.innerHTML = cells.map(function(x){
+      return '<div class="stat '+x.cls+'"><b>'+x.n+'</b><i>'+x.l+'</i></div>';
+    }).join("");
+  }
+
+  function renderChips(){
+    var c = counts();
+    var defs = [
+      { id:"all", label:"Все", n:c.all, cls:"" },
+      { id:"overdue", label:"Просроченные", n:c.late, cls:"late" },
+      { id:"new", label:"Новые", n:c.new, cls:"" },
+      { id:"progress", label:"В работе", n:c.progress, cls:"" },
+      { id:"done", label:"Выполненные", n:c.done, cls:"" }
+    ];
+    elChips.innerHTML = defs.map(function(d){
+      return '<button type="button" class="chip '+d.cls+'" data-st="'+d.id+'" aria-pressed="'+(filter.status===d.id)+'">'+
+             d.label+'<span class="n">'+d.n+'</span></button>';
+    }).join("");
+  }
+
+  function fillSelect(sel, values, allLabel, current){
+    var html = '<option value="all">'+allLabel+'</option>';
+    values.forEach(function(v){
+      html += '<option value="'+esc(v)+'"'+(current===v?" selected":"")+'>'+esc(v)+'</option>';
+    });
+    sel.innerHTML = html;
+    if(current === "all") sel.value = "all";
+  }
+  function uniq(key){
+    var seen = {}, out = [];
+    state.tasks.forEach(function(t){
+      var v = (t[key] || "").trim();
+      if(v && !seen[v]){ seen[v] = 1; out.push(v); }
+    });
+    return out.sort(function(a,b){ return a.localeCompare(b, "ru"); });
+  }
+  function renderSelects(){
+    var people = uniq("assignee"), meets = uniq("meeting");
+    manyMeetings = meets.length > 1;
+    fillSelect($("fAssignee"), people, "Все", filter.assignee);
+    fillSelect($("fMeeting"), meets, "Все", filter.meeting);
+    $("assignees").innerHTML = people.map(function(a){
+      return '<option value="'+esc(a)+'"></option>'; }).join("");
+  }
+
+  function visible(){
+    return state.tasks.filter(function(t){
+      if(filter.status === "overdue" && !isLate(t)) return false;
+      if(filter.status !== "all" && filter.status !== "overdue" && t.status !== filter.status) return false;
+      if(filter.assignee !== "all" && (t.assignee||"") !== filter.assignee) return false;
+      if(filter.meeting !== "all" && (t.meeting||"") !== filter.meeting) return false;
+      if(filter.q){
+        var q = filter.q.toLowerCase();
+        if((t.text+" "+(t.assignee||"")).toLowerCase().indexOf(q) < 0) return false;
+      }
+      return true;
+    }).sort(function(a,b){
+      var ad = a.status === "done" ? 1 : 0, bd = b.status === "done" ? 1 : 0;
+      if(ad !== bd) return ad - bd;
+      var al = isISO(a.due) ? fromISO(a.due).getTime() : 8.64e15;
+      var bl = isISO(b.due) ? fromISO(b.due).getTime() : 8.64e15;
+      if(al !== bl) return al - bl;
+      return (a.createdAt||0) - (b.createdAt||0);
+    });
+  }
+
+  /* ======================= карточки ======================= */
+  function cardHTML(t){
+    var cls = "card";
+    if(t.status === "done") cls += " is-done";
+    else if(isLate(t)) cls += " is-late";
+    else if(isSoon(t)) cls += " is-soon";
+    else if(t.status === "progress") cls += " is-progress";
+
+    var av = (t.assignee||"?").replace(/^@/,"").charAt(0).toUpperCase();
+    var meta = "";
+    if(t.assignee) meta += '<span class="tag"><span class="av" aria-hidden="true">'+esc(av)+'</span><b>'+esc(t.assignee)+'</b></span>';
+    else meta += '<span class="tag none">Ответственный не указан</span>';
+
+    if(isISO(t.due)){
+      var lab = dueLabel(t.due), late = isLate(t), soon = isSoon(t);
+      meta += '<span class="tag date '+(late?"late":(soon?"soon":""))+'">'+
+              (late?"! ":"")+esc(fmtDate(t.due))+(lab && t.status!=="done" ? " · "+esc(lab) : "")+'</span>';
+    } else {
+      meta += '<span class="tag none">Срок не указан</span>';
+    }
+    if(t.meeting && manyMeetings) meta += '<span class="tag meet">'+esc(t.meeting)+'</span>';
+
+    var seg = STATUSES.map(function(s){
+      return '<button type="button" class="st-'+s.id+'" data-act="status" data-id="'+t.id+'" data-v="'+s.id+
+             '" aria-pressed="'+(t.status===s.id)+'">'+s.label+'</button>';
+    }).join("");
+
+    var edit = "";
+    if(t.editing){
+      edit = '<div class="card-edit">'+
+        '<label class="fl">Формулировка<input type="text" id="e-text-'+t.id+'" value="'+esc(t.text)+'"></label>'+
+        '<div class="row2">'+
+          '<label class="fl">Ответственный<input type="text" id="e-ass-'+t.id+'" value="'+esc(t.assignee||"")+'" list="assignees"></label>'+
+          '<label class="fl">Срок<input type="date" id="e-due-'+t.id+'" value="'+esc(t.due||"")+'"></label>'+
+        '</div>'+
+        '<div class="btn-row"><button class="btn primary small" data-act="save" data-id="'+t.id+'" type="button">Сохранить</button>'+
+        '<button class="btn ghost small" data-act="cancel" data-id="'+t.id+'" type="button">Отмена</button></div>'+
+      '</div>';
+    }
+
+    return '<article class="'+cls+'">'+
+      '<p class="card-text">'+esc(t.text)+'</p>'+
+      '<div class="meta">'+meta+'</div>'+
+      '<div class="card-foot"><span class="seg">'+seg+'</span>'+
+        '<button class="card-del" data-act="edit" data-id="'+t.id+'" type="button" title="Изменить" aria-label="Изменить поручение">✎</button>'+
+        '<button class="card-del" data-act="del" data-id="'+t.id+'" type="button" title="Удалить" aria-label="Удалить поручение">✕</button>'+
+      '</div>'+ edit +
+    '</article>';
+  }
+
+  function renderList(){
+    var items = visible();
+    if(!items.length){
+      elList.innerHTML = '<div class="empty">'+
+        (state.tasks.length ? "По этому фильтру поручений нет." : "Поручений пока нет. Вставьте текст протокола выше и нажмите «Разобрать текст».")+
+        '</div>';
+      return;
+    }
+    var html = "", group = null;
+    items.forEach(function(t){
+      var g = t.status === "done" ? "done" : (isLate(t) ? "late" : "open");
+      if(g !== group){
+        group = g;
+        var lbl = g === "late" ? "Просрочено" : (g === "done" ? "Выполнено" : "В работе и новые");
+        html += '<div class="grp-label '+(g==="late"?"late":"")+'">'+lbl+'</div>';
+      }
+      html += cardHTML(t);
+    });
+    elList.innerHTML = html;
+  }
+
+  function renderAll(){
+    renderStats(); renderChips(); renderSelects(); renderList();
+    $("demoNotice").hidden = !state.demo;
+  }
+
+  /* ======================= черновики ======================= */
+  function draftHTML(d, i){
+    var missA = !d.assignee, missD = !d.due;
+    return '<div class="draft" data-on="'+d.on+'">'+
+      '<div class="draft-top">'+
+        '<input type="checkbox" id="d-on-'+i+'" data-i="'+i+'" data-f="on" '+(d.on?"checked":"")+' aria-label="Включить поручение">'+
+        '<label class="fl" style="flex:1">Задача<input type="text" id="d-text-'+i+'" data-i="'+i+'" data-f="text" value="'+esc(d.text)+'"></label>'+
+      '</div>'+
+      '<div class="draft-grid">'+
+        '<label class="fl">Ответственный '+(missA?'<span class="miss">не распознан</span>':'')+
+          '<input type="text" id="d-ass-'+i+'" data-i="'+i+'" data-f="assignee" value="'+esc(d.assignee)+'" list="assignees" placeholder="Фамилия" class="'+(missA?"flag":"")+'"></label>'+
+        '<label class="fl">Срок '+(missD?'<span class="miss">не распознан</span>':'')+
+          '<input type="date" id="d-due-'+i+'" data-i="'+i+'" data-f="due" value="'+esc(d.due)+'" class="'+(missD?"flag":"")+'"></label>'+
+      '</div>'+
+    '</div>';
+  }
+  function renderDrafts(skipped){
+    var wrap = $("draftWrap");
+    if(!drafts.length){ wrap.hidden = true; return; }
+    wrap.hidden = false;
+    var n = drafts.length;
+    var noAss = drafts.filter(function(d){ return !d.assignee; }).length;
+    var noDue = drafts.filter(function(d){ return !d.due; }).length;
+    var note = "Нашёл " + n + " " + plural(n,"поручение","поручения","поручений") + ".";
+    if(noAss || noDue){
+      var parts = [];
+      if(noAss) parts.push("без ответственного — " + noAss);
+      if(noDue) parts.push("без срока — " + noDue);
+      note += " Проверьте отмеченные поля: " + parts.join(", ") + ".";
+    } else {
+      note += " Проверьте и добавьте в трекер.";
+    }
+    $("draftNote").textContent = note;
+    $("draftList").innerHTML = drafts.map(draftHTML).join("");
+
+    var sk = $("skipped");
+    if(skipped && skipped.length){
+      sk.hidden = false;
+      sk.innerHTML = "Не похоже на поручения, пропустил:<ul>" +
+        skipped.slice(0,5).map(function(s){ return "<li>"+esc(s.length>90?s.slice(0,90)+"…":s)+"</li>"; }).join("") +
+        "</ul>";
+    } else { sk.hidden = true; sk.innerHTML = ""; }
+  }
+
+  /* ======================= экспорт ======================= */
+  function exportRows(){
+    return visible().map(function(t){
+      return {
+        text: t.text,
+        assignee: t.assignee || "не назначен",
+        due: isISO(t.due) ? fmtDate(t.due) : "без срока",
+        status: isLate(t) ? "Просрочена" : statusLabel(t.status),
+        meeting: t.meeting || ""
+      };
+    });
+  }
+  function asPlainText(){
+    var rows = visible();
+    if(!rows.length) return "";
+    var out = ["Поручения по совещанию — на " + fmtDate(toISO(today())), ""];
+    var groups = [
+      { k:"late", title:"ПРОСРОЧЕНО", f:function(t){ return isLate(t); } },
+      { k:"open", title:"В РАБОТЕ И НОВЫЕ", f:function(t){ return !isLate(t) && t.status !== "done"; } },
+      { k:"done", title:"ВЫПОЛНЕНО", f:function(t){ return t.status === "done"; } }
+    ];
+    groups.forEach(function(g){
+      var part = rows.filter(g.f);
+      if(!part.length) return;
+      out.push(g.title);
+      part.forEach(function(t, i){
+        var bits = [t.text];
+        bits.push(t.assignee || "ответственный не назначен");
+        bits.push(isISO(t.due) ? "срок " + fmtDate(t.due) : "без срока");
+        if(isLate(t)) bits.push("просрочено на " + Math.abs(daysLeft(t.due)) + " " + plural(daysLeft(t.due),"день","дня","дней"));
+        out.push((i+1) + ". " + bits.join(" — "));
+      });
+      out.push("");
+    });
+    return out.join("\n").trim();
+  }
+  function asTable(){
+    var rows = exportRows();
+    if(!rows.length) return "";
+    var head = "| Задача | Ответственный | Срок | Статус |";
+    var sep  = "| --- | --- | --- | --- |";
+    return [head, sep].concat(rows.map(function(r){
+      return "| " + r.text.replace(/\|/g,"/") + " | " + r.assignee + " | " + r.due + " | " + r.status + " |";
+    })).join("\n");
+  }
+  function asCSV(){
+    var rows = exportRows();
+    var q = function(v){ return '"' + String(v).replace(/"/g,'""') + '"'; };
+    var lines = [["Задача","Ответственный","Срок","Статус","Совещание"].map(q).join(";")];
+    rows.forEach(function(r){ lines.push([r.text,r.assignee,r.due,r.status,r.meeting].map(q).join(";")); });
+    return "﻿" + lines.join("\r\n");
+  }
+
+  function copyText(txt, okMsg){
+    if(!txt){ toast("Нет поручений для выгрузки"); return; }
+    var done = function(){ toast(okMsg); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done, function(){ legacyCopy(txt, done); });
+    } else legacyCopy(txt, done);
+  }
+  function legacyCopy(txt, done){
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = txt; ta.setAttribute("readonly","");
+      ta.style.position = "fixed"; ta.style.top = "-1000px";
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      ok ? done() : toast("Не удалось скопировать — выделите текст вручную");
+    }catch(e){ toast("Не удалось скопировать"); }
+  }
+
+  function saveFile(name, data, fallbackText){
+    try{
+      var type = /\.csv$/i.test(name) ? "text/csv;charset=utf-8" : "application/json;charset=utf-8";
+      var blob = new Blob([data], { type: type });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name; a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      toast("Файл " + name + " сохранён в папку загрузок");
+    }catch(e){
+      copyText(fallbackText, "Скачать не получилось — данные скопированы в буфер");
+    }
+  }
+
+  /* ======================= демо-данные ======================= */
+  function demoTasks(){
+    var meet = "Планёрка по проекту от " + fmtDate(toISO(plusDays(-7)));
+    var base = [
+      { text:"Подготовить отчёт по выручке за сентябрь", assignee:"Иванов И.И.", d:-3, status:"progress" },
+      { text:"Согласовать смету с подрядчиком", assignee:"Петрова", d:-1, status:"new" },
+      { text:"Подготовить проект договора на поставку", assignee:"Сидоров", d:1, status:"progress" },
+      { text:"Собрать обратную связь от пяти ключевых клиентов", assignee:"Кузнецов А.В.", d:6, status:"new" },
+      { text:"Обновить регламент согласования закупок", assignee:"Петрова", d:-6, status:"done" }
+    ];
+    return base.map(function(b, i){
+      return {
+        id: uid(), text: b.text, assignee: b.assignee, due: toISO(plusDays(b.d)),
+        status: b.status, meeting: meet, createdAt: Date.now() + i
+      };
+    });
+  }
+  var SAMPLE_TEXT =
+    "Планёрка 21.09\n" +
+    "Решили:\n" +
+    "1. Иванов — подготовить отчёт по выручке до 25.09\n" +
+    "2. Поручить Петровой согласовать смету с подрядчиком, срок 2 октября\n" +
+    "- Сидоров: подготовить проект договора к пятнице\n" +
+    "Собрать обратную связь от клиентов — отв. Кузнецов А.В. — до конца недели\n" +
+    "Обновить регламент согласования закупок, ответственный Петрова, в течение 10 дней";
+
+  /* ======================= события ======================= */
+  function togglePanel(panelId, headId, bodyId){
+    var p = $(panelId), h = $(headId), b = $(bodyId);
+    var open = p.getAttribute("data-open") !== "true";
+    p.setAttribute("data-open", open ? "true" : "false");
+    h.setAttribute("aria-expanded", open ? "true" : "false");
+    b.hidden = !open;
+  }
+  $("inputHead").addEventListener("click", function(){ togglePanel("inputPanel","inputHead","inputBody"); });
+  $("exportHead").addEventListener("click", function(){ togglePanel("exportPanel","exportHead","exportBody"); });
+  [["inputHead","inputPanel","inputBody"],["exportHead","exportPanel","exportBody"]].forEach(function(a){
+    $(a[0]).addEventListener("keydown", function(e){
+      if(e.key === "Enter" || e.key === " "){ e.preventDefault(); togglePanel(a[1],a[0],a[2]); }
+    });
+  });
+
+  $("themeBtn").addEventListener("click", function(){
+    var root = document.documentElement;
+    var cur = root.getAttribute("data-theme");
+    var dark = cur ? cur === "dark"
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    root.setAttribute("data-theme", dark ? "light" : "dark");
+    try{ localStorage.setItem(KEY+":theme", dark ? "light" : "dark"); }catch(e){}
+  });
+
+  $("sampleBtn").addEventListener("click", function(){
+    $("src").value = SAMPLE_TEXT;
+    $("src").focus();
+  });
+
+  function doParse(){
+    var raw = $("src").value;
+    if(!raw.trim()){ toast("Сначала вставьте текст протокола"); return; }
+    var res = parseText(raw);
+    if(!res.items.length){
+      drafts = [];
+      renderDrafts([]);
+      toast("Не нашёл поручений — добавьте вручную");
+      return;
+    }
+    drafts = res.items.map(function(x){
+      return { on:true, text:x.text, assignee:x.assignee, due:x.due };
+    });
+    renderDrafts(res.skipped);
+    $("draftWrap").scrollIntoView({ behavior:"smooth", block:"nearest" });
+  }
+  $("parseBtn").addEventListener("click", doParse);
+  $("src").addEventListener("keydown", function(e){
+    if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); doParse(); }
+  });
+
+  $("manualBtn").addEventListener("click", function(){
+    drafts.push({ on:true, text:"", assignee:"", due:"" });
+    renderDrafts([]);
+    var last = document.querySelector("#draftList .draft:last-of-type input[type=text]");
+    if(last) last.focus();
+  });
+
+  $("draftList").addEventListener("input", function(e){
+    var el = e.target, i = el.getAttribute("data-i"), f = el.getAttribute("data-f");
+    if(i === null || !f) return;
+    var d = drafts[+i]; if(!d) return;
+    if(f === "on"){ d.on = el.checked; el.closest(".draft").setAttribute("data-on", d.on); }
+    else d[f] = el.value;
+  });
+
+  $("dropBtn").addEventListener("click", function(){
+    drafts = []; renderDrafts([]);
+  });
+
+  $("addBtn").addEventListener("click", function(){
+    var meet = $("meetName").value.trim();
+    var md = $("meetDate").value;
+    var label = meet || "Совещание";
+    if(isISO(md)) label += " от " + fmtDate(md);
+    var added = 0;
+    drafts.forEach(function(d){
+      if(!d.on) return;
+      var text = cleanTask(d.text);
+      if(text.length < 2) return;
+      state.tasks.push({
+        id: uid(), text: text, assignee: d.assignee.trim(),
+        due: isISO(d.due) ? d.due : "", status: "new",
+        meeting: label, createdAt: Date.now() + added
+      });
+      added++;
+    });
+    if(!added){ toast("Нечего добавлять"); return; }
+    if(state.demo){
+      state.tasks = state.tasks.filter(function(t){ return t.meeting.indexOf("Планёрка по проекту от") !== 0; });
+      state.demo = false;
+    }
+    drafts = []; renderDrafts([]);
+    $("src").value = "";
+    save(); renderAll();
+    toast("Добавлено " + added + " " + plural(added,"поручение","поручения","поручений"));
+  });
+
+  elChips.addEventListener("click", function(e){
+    var b = e.target.closest(".chip"); if(!b) return;
+    filter.status = b.getAttribute("data-st");
+    renderChips(); renderList();
+  });
+  $("fAssignee").addEventListener("change", function(){ filter.assignee = this.value; renderList(); });
+  $("fMeeting").addEventListener("change", function(){ filter.meeting = this.value; renderList(); });
+  $("fQuery").addEventListener("input", function(){ filter.q = this.value.trim(); renderList(); });
+
+  elList.addEventListener("click", function(e){
+    var b = e.target.closest("[data-act]"); if(!b) return;
+    var act = b.getAttribute("data-act"), id = b.getAttribute("data-id");
+    var t = null;
+    for(var i=0;i<state.tasks.length;i++) if(state.tasks[i].id === id) t = state.tasks[i];
+    if(!t) return;
+
+    if(act === "status"){
+      var v = b.getAttribute("data-v");
+      t.status = t.status === v && v !== "new" ? "new" : v;
+      t.doneAt = t.status === "done" ? toISO(today()) : "";
+      save(); renderAll();
+    } else if(act === "edit"){
+      state.tasks.forEach(function(x){ x.editing = false; });
+      t.editing = true; renderList();
+      var f = $("e-text-"+t.id); if(f) f.focus();
+    } else if(act === "cancel"){
+      t.editing = false; renderList();
+    } else if(act === "save"){
+      var nt = cleanTask($("e-text-"+t.id).value);
+      if(nt.length >= 2) t.text = nt;
+      t.assignee = $("e-ass-"+t.id).value.trim();
+      var nd = $("e-due-"+t.id).value;
+      t.due = isISO(nd) ? nd : "";
+      t.editing = false;
+      save(); renderAll();
+      toast("Поручение обновлено");
+    } else if(act === "del"){
+      state.tasks = state.tasks.filter(function(x){ return x.id !== id; });
+      if(!state.tasks.length) state.demo = false;
+      save(); renderAll();
+      toast("Поручение удалено");
+    }
+  });
+
+  $("clearDemo").addEventListener("click", function(){
+    state.tasks = []; state.demo = false; save(); renderAll();
+    toast("Пример удалён — трекер пуст");
+  });
+
+  $("copyText").addEventListener("click", function(){ copyText(asPlainText(), "Список скопирован"); });
+  $("copyMd").addEventListener("click", function(){ copyText(asTable(), "Таблица скопирована"); });
+  $("dlCsv").addEventListener("click", function(){
+    var csv = asCSV();
+    if(!visible().length){ toast("Нет поручений для выгрузки"); return; }
+    saveFile("porucheniya-" + toISO(today()) + ".csv", csv, csv);
+  });
+  $("dlJson").addEventListener("click", function(){
+    var json = JSON.stringify({ tasks: state.tasks, savedAt: new Date().toISOString() }, null, 2);
+    saveFile("porucheniya-backup-" + toISO(today()) + ".json", json, json);
+  });
+  $("upJson").addEventListener("click", function(){ $("jsonFile").click(); });
+  $("jsonFile").addEventListener("change", function(){
+    var f = this.files && this.files[0]; if(!f) return;
+    var r = new FileReader();
+    r.onload = function(){
+      try{
+        var p = JSON.parse(String(r.result));
+        var arr = Array.isArray(p) ? p : (p && p.tasks);
+        if(!Array.isArray(arr)) throw new Error("bad");
+        state.tasks = arr.filter(function(t){ return t && t.text; }).map(function(t){
+          return {
+            id: t.id || uid(), text: String(t.text), assignee: String(t.assignee||""),
+            due: isISO(t.due) ? t.due : "", status: /^(new|progress|done)$/.test(t.status) ? t.status : "new",
+            meeting: String(t.meeting||""), createdAt: t.createdAt || Date.now()
+          };
+        });
+        state.demo = false;
+        save(); renderAll();
+        toast("Загружено " + state.tasks.length + " " + plural(state.tasks.length,"поручение","поручения","поручений"));
+      }catch(e){ toast("Файл не похож на резервную копию"); }
+    };
+    r.readAsText(f);
+    this.value = "";
+  });
+
+  /* ======================= старт ======================= */
+  try{
+    var th = localStorage.getItem(KEY+":theme");
+    if(th === "dark" || th === "light") document.documentElement.setAttribute("data-theme", th);
+  }catch(e){}
+
+  if(!load()){
+    state.tasks = demoTasks();
+    state.demo = true;
+    save();
+  }
+  $("meetDate").value = toISO(today());
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
